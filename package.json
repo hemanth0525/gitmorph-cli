@@ -1,0 +1,27 @@
+{
+    "name": "gitmorph-cli",
+    "version": "1.0.0",
+    "description": "Simplified Git operations and enhancing productivity",
+    "main": "index.js",
+    "type": "module",
+    "bin": {
+        "gm": "./index.js"
+    },
+    "scripts": {
+        "start": "node index.js"
+    },
+    "keywords": [
+        "git",
+        "cli",
+        "tool",
+        "productivity"
+    ],
+    "author": "blu3ph4ntom",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "^5.0.0",
+        "commander": "^8.3.0",
+        "gitmorph-cli": "file:",
+        "inquirer": "^12.0.1"
+    }
+}
