@@ -1,13 +1,15 @@
-# GitMorph (gm)
+# GitMorph CLI
 
-GitMorph is a CLI tool designed to simplify Git operations and enhance developer productivity. It provides compact, user-friendly alternatives to standard Git commands and additional features to streamline your workflow.
+GitMorph CLI is an advanced Git operations and developer productivity tool that simplifies Git commands and provides additional features to enhance your development workflow.
 
 ## Installation
 
-To install GitMorph globally, run:
+To install GitMorph CLI globally, run:
 
 ```
+
 npm install -g gitmorph-cli
+
 ```
 
 ## Usage
@@ -38,9 +40,6 @@ After installation, you can use the `gm` command followed by the desired operati
 - `gm analyze`: Analyze repository statistics
 - `gm todo`: List or add TODO comments in your code
 - `gm scaffold <type>`: Scaffold a basic project structure (node, react)
-
-### Advanced Features
-
 - `gm search <query>`: Search for a string in all files
 - `gm diff`: Show changes between commits, commit and working tree, etc
 - `gm blame <file>`: Show what revision and author last modified each line of a file
@@ -50,66 +49,98 @@ After installation, you can use the `gm` command followed by the desired operati
 - `gm dependencies`: Analyze project dependencies
 - `gm docker`: Generate a basic Dockerfile for the project
 - `gm test`: Run tests
+- `gm config`: Manage GitMorph configuration
 
 ## Examples
 
 1. Initialize a new repository:
 
-   ```
-   gm init
-   ```
+```
+
+gm init
+
+```
 
 2. Stage all files and commit:
 
-   ```
-   gm stage .
-   gm save "Initial commit"
-   ```
+```
+
+gm stage .
+gm save "Initial commit"
+
+```
 
 3. Push changes to remote:
 
-   ```
-   gm upload
-   ```
+```
+
+gm upload
+
+```
 
 4. Analyze repository statistics:
 
-   ```
-   gm analyze
-   ```
+```
+
+gm analyze
+
+```
 
 5. Scaffold a new Node.js project:
 
-   ```
-   gm scaffold node
-   ```
+```
+
+gm scaffold node
+
+```
 
 6. Search for a string in all files:
 
-   ```
-   gm search "TODO"
-   ```
+```
+
+gm search "TODO"
+
+```
 
 7. Run a benchmark test:
 
-   ```
-   gm benchmark "npm test" -r 10
-   ```
+```
+
+gm benchmark "npm test" -r 10
+
+```
 
 8. Generate a Dockerfile:
-   ```
-   gm docker
-   ```
+```
 
-## Troubleshooting
+gm docker
 
-If you encounter any issues, make sure:
+```
 
-1. You have Git installed and configured on your system.
-2. You are in a Git repository when running Git-related commands.
-3. You have the necessary permissions to perform the requested operations.
+## Configuration
 
-For more detailed error messages, check the console output.
+You can configure GitMorph CLI using the `gm config` command. This allows you to set global or local configurations.
+
+- Set a global configuration:
+```
+
+gm config -g -s key value
+
+```
+
+- Set a local configuration:
+```
+
+gm config -l -s key value
+
+```
+
+- View current configuration:
+```
+
+gm config -v
+
+```
 
 ## Contributing
 
@@ -119,19 +150,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License.
 
-```
+## Author
 
-These new advanced features will help developers in various ways:
+blu3ph4ntom
 
-1. `search`: Quickly find specific code or text across all files in the project.
-2. `diff`: Easily view changes between commits or staged changes.
-3. `blame`: Identify who made specific changes to a file and when.
-4. `hooks`: Manage Git hooks directly from the command line.
-5. `lint`: Run linting on the project with an option to automatically fix issues.
-6. `benchmark`: Run simple performance tests on commands or scripts.
-7. `dependencies`: Analyze and manage project dependencies.
-8. `docker`: Quickly generate a basic Dockerfile for the project.
-9. `test`: Run tests with an option for watch mode.
+## Repository
 
-These features cover a wide range of development tasks and will significantly enhance developer productivity when using GitMorph.
-```
+https://github.com/hemanth0525/gitmorph-cli
+
+## Homepage
+
+https://hemanth0525.github.io/gitmorph

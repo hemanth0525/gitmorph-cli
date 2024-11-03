@@ -2,11 +2,14 @@
 
 import { program } from "commander";
 import * as commands from "./src/commands.js";
+import { displayBanner } from "./src/utils.js";
+
+displayBanner();
 
 program
     .name("gm")
-    .description("GitMorph - Simplified Git operations and beyond")
-    .version("1.0.0");
+    .description("GitMorph - Advanced Git operations and developer productivity tool")
+    .version("1.0.1");
 
 // Register all commands
 Object.entries(commands).forEach(([name, command]) => {

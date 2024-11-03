@@ -1,7 +1,7 @@
 {
     "name": "gitmorph-cli",
     "version": "1.0.0",
-    "description": "Simplified Git operations and enhancing productivity",
+    "description": "Advanced Git operations and developer productivity tool",
     "main": "index.js",
     "type": "module",
     "bin": {
@@ -14,14 +14,20 @@
         "git",
         "cli",
         "tool",
-        "productivity"
+        "productivity",
+        "workflow"
     ],
     "author": "blu3ph4ntom",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/hemanth0525/gitmorph-cli"
+    },
+    "homepage": "https://hemanth0525.github.io/gitmorph",
     "dependencies": {
         "chalk": "^5.0.0",
         "commander": "^8.3.0",
         "gitmorph-cli": "file:",
-        "inquirer": "^12.0.1"
+        "inquirer": "^8.2.0"
     }
 }

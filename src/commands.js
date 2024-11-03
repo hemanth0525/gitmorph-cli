@@ -1,23 +1,44 @@
 import { Command } from 'commander';
-import { runCommand, displayFeedback, isGitRepo, createFileWithContent, readFileContent } from './utils.js';
+import {
+    runCommand,
+    displayFeedback,
+    isGitRepo,
+    createFileWithContent,
+    readFileContent,
+    getGlobalConfig,
+    setGlobalConfig,
+    getLocalConfig,
+    setLocalConfig
+} from './utils.js';
 import chalk from 'chalk';
 import fs from 'fs';
 import inquirer from 'inquirer';
+import { exec } from 'child_process';
+import util from 'util';
+
+const execPromise = util.promisify(exec);
 
 // Git Commands
 
 export const init = new Command('init')
     .description('Initialize a new Git repository')
-    .action(() => {
-        runCommand('git init');
+    .option('-b, --branch <name>', 'Specify the initial branch name')
+    .action((options) => {
+        const command = options.branch ? `git init -b ${options.branch}` : 'git init';
+        runCommand(command);
         displayFeedback('Git repository initialized successfully.');
     });
 
 export const clone = new Command('clone')
     .description('Clone a repository')
     .argument('<url>', 'Repository URL')
-    .action((url) => {
-        runCommand(`git clone ${url}`);
+    .option('-b, --branch <name>', 'Specify a branch to clone')
+    .option('-d, --depth <number>', 'Create a shallow clone with a specified depth')
+    .action((url, options) => {
+        let command = `git clone ${url}`;
+        if (options.branch) command += ` -b ${options.branch}`;
+        if (options.depth) command += ` --depth ${options.depth}`;
+        runCommand(command);
         displayFeedback(`Repository cloned successfully from ${url}`);
     });
 
@@ -32,35 +53,53 @@ export const stage = new Command('stage')
 export const save = new Command('save')
     .description('Commit changes')
     .argument('<message>', 'Commit message')
-    .action((message) => {
-        runCommand(`git commit -m "${message}"`);
+    .option('-a, --all', 'Automatically stage files that have been modified and deleted')
+    .action((message, options) => {
+        let command = 'git commit';
+        if (options.all) command += ' -a';
+        command += ` -m "${message}"`;
+        runCommand(command);
         displayFeedback(`Changes committed with message: '${message}'`);
     });
 
 export const upload = new Command('upload')
     .description('Push to remote')
-    .action(() => {
-        runCommand('git push');
+    .option('-b, --branch <name>', 'Specify the branch to push')
+    .action((options) => {
+        let command = 'git push';
+        if (options.branch) command += ` origin ${options.branch}`;
+        runCommand(command);
         displayFeedback('Changes pushed to remote successfully.');
     });
 
 export const download = new Command('download')
     .description('Pull from remote')
-    .action(() => {
-        runCommand('git pull');
+    .option('-b, --branch <name>', 'Specify the branch to pull')
+    .action((options) => {
+        let command = 'git pull';
+        if (options.branch) command += ` origin ${options.branch}`;
+        runCommand(command);
         displayFeedback('Changes pulled from remote successfully.');
     });
 
 export const status = new Command('status')
     .description('Check status')
-    .action(() => {
-        console.log(runCommand('git status'));
+    .option('-s, --short', 'Give the output in the short-format')
+    .action((options) => {
+        let command = 'git status';
+        if (options.short) command += ' -s';
+        console.log(runCommand(command));
     });
 
 export const history = new Command('history')
     .description('Check log')
-    .action(() => {
-        console.log(runCommand('git log --oneline'));
+    .option('-n, --number <number>', 'Limit the number of commits to output')
+    .option('--oneline', 'Show each commit on a single line')
+    .action((options) => {
+        let command = 'git log';
+        if (options.number) command += ` -n ${options.number}`;
+        if (options.oneline) command += ' --oneline';
+        console.log(runCommand(command));
     });
 
 export const branch = new Command('branch')
@@ -90,22 +129,31 @@ export const merge = new Command('merge')
 export const delete_ = new Command('delete')
     .description('Delete a branch')
     .argument('<branch>', 'Branch to delete')
-    .action((branch) => {
-        runCommand(`git branch -d ${branch}`);
+    .option('-f, --force', 'Force deletion of branch')
+    .action((branch, options) => {
+        let command = `git branch -d ${branch}`;
+        if (options.force) command = `git branch -D ${branch}`;
+        runCommand(command);
         displayFeedback(`Branch '${branch}' deleted successfully.`);
     });
 
 export const stash = new Command('stash')
     .description('Stash changes')
-    .action(() => {
-        runCommand('git stash');
+    .option('-m, --message <message>', 'Stash with a message')
+    .action((options) => {
+        let command = 'git stash';
+        if (options.message) command += ` push -m "${options.message}"`;
+        runCommand(command);
         displayFeedback('Changes stashed successfully.');
     });
 
 export const applyStash = new Command('apply-stash')
     .description('Apply stashed changes')
-    .action(() => {
-        runCommand('git stash apply');
+    .option('-i, --index <index>', 'Apply a specific stash by index')
+    .action((options) => {
+        let command = 'git stash apply';
+        if (options.index) command += ` stash@{${options.index}}`;
+        runCommand(command);
         displayFeedback('Stashed changes applied successfully.');
     });
 
@@ -119,366 +167,17 @@ export const rebase = new Command('rebase')
 
 // Beyond Git Commands
 
-const ignorePatterns = {
-    node: `
-  # Node
-  node_modules/
-  npm-debug.log*
-  yarn-debug.log*
-  yarn-error.log*
-  lerna-debug.log*
-  .pnpm-debug.log*
-  report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-  .node_repl_history
-  *.tgz
-  .yarn-integrity
-  .env
-  .env.development.local
-  .env.test.local
-  .env.production.local
-  .env.local
-  `,
-    python: `
-  # Python
-  __pycache__/
-  *.py[cod]
-  *$py.class
-  *.so
-  .Python
-  build/
-  develop-eggs/
-  dist/
-  downloads/
-  eggs/
-  .eggs/
-  lib/
-  lib64/
-  parts/
-  sdist/
-  var/
-  wheels/
-  share/python-wheels/
-  *.egg-info/
-  .installed.cfg
-  *.egg
-  MANIFEST
-  *.manifest
-  *.spec
-  pip-log.txt
-  pip-delete-this-directory.txt
-  htmlcov/
-  .tox/
-  .nox/
-  .coverage
-  .coverage.*
-  .cache
-  nosetests.xml
-  coverage.xml
-  *.cover
-  *.py,cover
-  .hypothesis/
-  .pytest_cache/
-  cover/
-  *.mo
-  *.pot
-  *.log
-  local_settings.py
-  db.sqlite3
-  db.sqlite3-journal
-  instance/
-  .webassets-cache
-  .scrapy
-  docs/_build/
-  .pybuilder/
-  target/
-  .ipynb_checkpoints
-  profile_default/
-  ipython_config.py
-  __pypackages__/
-  celerybeat-schedule
-  celerybeat.pid
-  *.sage.py
-  .env
-  .venv
-  env/
-  venv/
-  ENV/
-  env.bak/
-  venv.bak/
-  .spyderproject
-  .spyproject
-  .ropeproject
-  /site
-  .mypy_cache/
-  .dmypy.json
-  dmypy.json
-  .pyre/
-  .pytype/
-  cython_debug/
-  `,
-    java: `
-  # Java
-  *.class
-  *.log
-  *.ctxt
-  .mtj.tmp/
-  *.jar
-  *.war
-  *.nar
-  *.ear
-  *.zip
-  *.tar.gz
-  *.rar
-  hs_err_pid*
-  replay_pid*
-  `,
-    ruby: `
-  # Ruby
-  *.gem
-  *.rbc
-  /.config
-  /coverage/
-  /InstalledFiles
-  /pkg/
-  /spec/reports/
-  /spec/examples.txt
-  /test/tmp/
-  /test/version_tmp/
-  /tmp/
-  .dat*
-  .repl_history
-  *.bridgesupport
-  build-iPhoneOS/
-  build-iPhoneSimulator/
-  /.yardoc/
-  /_yardoc/
-  /doc/
-  /rdoc/
-  /.bundle/
-  /vendor/bundle
-  /lib/bundler/man/
-  .rvmrc
-  `,
-    go: `
-  # Go
-  *.exe
-  *.exe~
-  *.dll
-  *.so
-  *.dylib
-  *.test
-  *.out
-  go.work
-  `,
-    rust: `
-  # Rust
-  debug/
-  target/
-  Cargo.lock
-  **/*.rs.bk
-  *.pdb
-  `,
-    csharp: `
-  # C#
-  *.rsuser
-  *.suo
-  *.user
-  *.userosscache
-  *.sln.docstates
-  *.userprefs
-  [Dd]ebug/
-  [Dd]ebugPublic/
-  [Rr]elease/
-  [Rr]eleases/
-  x64/
-  x86/
-  [Ww][Ii][Nn]32/
-  [Aa][Rr][Mm]/
-  [Aa][Rr][Mm]64/
-  bld/
-  [Bb]in/
-  [Oo]bj/
-  [Ll]og/
-  [Ll]ogs/
-  .vs/
-  *.pidb
-  *.svclog
-  *.scc
-  `,
-    web: `
-  # Web
-  *.log
-  *.pid
-  *.seed
-  *.pid.lock
-  logs
-  pids
-  lib-cov
-  coverage
-  .nyc_output
-  .grunt
-  bower_components
-  .lock-wscript
-  build/Release
-  jspm_packages/
-  web_modules/
-  *.tsbuildinfo
-  .npm
-  .eslintcache
-  .stylelintcache
-  .rpt2_cache/
-  .rts2_cache_cjs/
-  .rts2_cache_es/
-  .rts2_cache_umd/
-  .node_repl_history
-  .yarn-integrity
-  .env
-  .env.test
-  .cache
-  .parcel-cache
-  .next
-  out
-  .nuxt
-  dist
-  .cache/
-  .vuepress/dist
-  .temp
-  .docusaurus
-  .serverless/
-  .fusebox/
-  .dynamodb/
-  .tern-port
-  .vscode-test
-  .yarn/cache
-  .yarn/unplugged
-  .yarn/build-state.yml
-  .yarn/install-state.gz
-  .pnp.*
-  `,
-    ide: `
-  # IDEs and editors
-  .idea/
-  .vscode/
-  *.swp
-  *.swo
-  *.sublime-workspace
-  *.sublime-project
-  .DS_Store
-  .AppleDouble
-  .LSOverride
-  ._*
-  .Spotlight-V100
-  .Trashes
-  .AppleDB
-  .AppleDesktop
-  Network Trash Folder
-  Temporary Items
-  .apdisk
-  Thumbs.db
-  Thumbs.db:encryptable
-  ehthumbs.db
-  ehthumbs_vista.db
-  *.stackdump
-  [Dd]esktop.ini
-  $RECYCLE.BIN/
-  *.lnk
-  `,
-    database: `
-  # Databases
-  *.mdb
-  *.ldb
-  *.sqlite
-  *.sqlite3
-  *.db
-  `,
-    logs: `
-  # Logs
-  logs
-  *.log
-  npm-debug.log*
-  yarn-debug.log*
-  yarn-error.log*
-  lerna-debug.log*
-  .pnpm-debug.log*
-  `,
-    os: `
-  # OS generated files
-  .DS_Store
-  .DS_Store?
-  ._*
-  .Spotlight-V100
-  .Trashes
-  ehthumbs.db
-  Thumbs.db
-  `,
-    archives: `
-  # Archives
-  *.7z
-  *.jar
-  *.rar
-  *.zip
-  *.gz
-  *.gzip
-  *.tgz
-  *.bzip
-  *.bzip2
-  *.bz2
-  *.xz
-  *.lzma
-  *.cab
-  *.iso
-  *.tar
-  *.dmg
-  *.xpi
-  *.gem
-  *.egg
-  *.deb
-  *.rpm
-  *.msi
-  *.msm
-  *.msp
-  `,
-    images: `
-  # Images
-  *.jpg
-  *.jpeg
-  *.jpe
-  *.jif
-  *.jfif
-  *.jfi
-  *.jp2
-  *.j2k
-  *.jpf
-  *.jpx
-  *.jpm
-  *.mj2
-  *.jxr
-  *.hdp
-  *.wdp
-  *.gif
-  *.raw
-  *.webp
-  *.png
-  *.apng
-  *.mng
-  *.tiff
-  *.tif
-  *.svg
-  *.svgz
-  *.pdf
-  *.xbm
-  *.bmp
-  *.dib
-  *.ico
-  *.3dm
-  *.max
-  `,
-};
-
 export const createIgnore = new Command('create-ignore')
     .description('Create a .gitignore file with common patterns')
     .option('-a, --all', 'Include all patterns')
     .action(async (options) => {
+        const ignorePatterns = {
+            node: '# Node\nnode_modules/\nnpm-debug.log\nyarn-error.log\n',
+            python: '# Python\n__pycache__/\n*.py[cod]\n',
+            java: '# Java\n*.class\n*.jar\n',
+            // Add more patterns as needed
+        };
+
         let selectedPatterns;
 
         if (options.all) {
@@ -497,8 +196,7 @@ export const createIgnore = new Command('create-ignore')
 
         let ignoreContent = '# GitMorph generated .gitignore\n\n';
         selectedPatterns.forEach((pattern) => {
-            ignoreContent += `# ${pattern.charAt(0).toUpperCase() + pattern.slice(1)}\n`;
-            ignoreContent += ignorePatterns[pattern].trim() + '\n\n';
+            ignoreContent += ignorePatterns[pattern] + '\n';
         });
 
         createFileWithContent('.gitignore', ignoreContent.trim());
@@ -595,7 +293,9 @@ export const search = new Command('search')
     .argument('<query>', 'Search query')
     .option('-i, --ignore-case', 'Ignore case')
     .action((query, options) => {
-        const ignoreCase = options.ignoreCase ? '-i' : '';
+        const ignoreCase = options.ignoreCase ? '-i'
+
+            : '';
         try {
             const result = runCommand(`grep -R ${ignoreCase} "${query}" .`);
             console.log(result);
@@ -729,4 +429,39 @@ export const test = new Command('test')
             command += ' -- --watch';
         }
         console.log(runCommand(command));
+    });
+
+export const config = new Command('config')
+    .description('Manage GitMorph configuration')
+    .option('-g, --global', 'Use global configuration')
+    .option('-l, --local', 'Use local configuration')
+    .option('-s, --set <key> <value>', 'Set a configuration value')
+    .option('-d, --delete <key>', 'Delete a configuration value')
+    .option('-v, --view', 'View the current configuration')
+    .action((options) => {
+        const isGlobal = options.global || !options.local;
+        const currentConfig = isGlobal ? getGlobalConfig() : getLocalConfig();
+
+        if (options.set) {
+            currentConfig[options.set[0]] = options.set[1];
+            if (isGlobal) {
+                setGlobalConfig(currentConfig);
+            } else {
+                setLocalConfig(currentConfig);
+            }
+            console.log(chalk.green(`Configuration updated: ${options.set[0]} = ${options.set[1]}`));
+        } else if (options.delete) {
+            delete currentConfig[options.delete];
+            if (isGlobal) {
+                setGlobalConfig(currentConfig);
+            } else {
+                setLocalConfig(currentConfig);
+            }
+            console.log(chalk.green(`Configuration key deleted: ${options.delete}`));
+        } else if (options.view) {
+            console.log(chalk.cyan('Current configuration:'));
+            console.log(JSON.stringify(currentConfig, null, 2));
+        } else {
+            console.log('Use --set, --delete, or --view to manage configuration.');
+        }
     });
