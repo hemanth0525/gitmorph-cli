@@ -9,7 +9,7 @@ displayBanner();
 program
     .name("gm")
     .description("GitMorph - Advanced Git operations and developer productivity tool")
-    .version("1.0.1");
+    .version("1.0.2");
 
 // Register all commands
 Object.entries(commands).forEach(([name, command]) => {
