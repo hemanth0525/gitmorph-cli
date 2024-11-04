@@ -7,9 +7,9 @@ import { displayBanner } from "./src/utils.js";
 displayBanner();
 
 program
-    .name("gm")
+    .name("gim")
     .description("GitMorph - Advanced Git operations and developer productivity tool")
-    .version("1.0.2");
+    .version("1.0.3");
 
 // Register all commands
 Object.entries(commands).forEach(([name, command]) => {

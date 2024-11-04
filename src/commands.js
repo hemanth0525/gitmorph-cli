@@ -228,7 +228,7 @@ export const todo = new Command('todo')
     .option('-a, --add <task>', 'Add a new TODO')
     .option('-l, --list', 'List all TODOs')
     .action((options) => {
-        const todoFile = '.gm_todos';
+        const todoFile = '.gim_todos';
 
         if (options.add) {
             const todo = `TODO: ${options.add}`;
