@@ -9,7 +9,10 @@
     },
     "scripts": {
         "start": "node index.js",
-        "postinstall": "echo 'Installation complete! Use \"gim\" to start using GitMorph CLI.'"
+        "install gitmorph-cli": "npm i -g gitmorph-cli && echo 'Installation complete! Use \"gim\" to start using GitMorph CLI.'",
+        "install -g gitmorph-cli": "npm i -g gitmorph-cli && echo 'Installation complete! Use \"gim\" to start using GitMorph CLI.'",
+        "i gitmorph-cli": "npm i -g gitmorph-cli && echo 'Installation complete! Use \"gim\" to start using GitMorph CLI.'",
+        "i -g gitmorph-cli": "npm i -g gitmorph-cli && echo 'Installation complete! Use \"gim\" to start using GitMorph CLI.'"
     },
     "keywords": [
         "git",
