@@ -1,6 +1,6 @@
 {
     "name": "gitmorph-cli",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Advanced Git operations and developer productivity tool",
     "main": "index.js",
     "type": "module",
